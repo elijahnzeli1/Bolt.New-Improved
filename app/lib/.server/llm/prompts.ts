@@ -282,3 +282,8 @@ export const CONTINUE_PROMPT = stripIndents`
   Continue your prior response. IMPORTANT: Immediately begin from where you left off without any interruptions.
   Do not repeat any content, including artifact and action tags.
 `;
+
+export const mainPrompt = `
+  Please provide a detailed description of your project requirements.
+  Ensure to include any specific technologies or frameworks you wish to use.
+`;

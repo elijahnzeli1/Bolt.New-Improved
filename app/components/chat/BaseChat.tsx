@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import React, { type RefCallback } from 'react';
+import React, { type RefCallback, useState } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Menu } from '~/components/sidebar/Menu.client';
 import { IconButton } from '~/components/ui/IconButton';
@@ -22,7 +22,7 @@ interface BaseChatProps {
   promptEnhanced?: boolean;
   input?: string;
   handleStop?: () => void;
-  sendMessage?: (event: React.UIEvent, messageInput?: string) => void;
+  sendMessage?: (event: React.UIEvent, messageInput?: string, model?: string) => void;
   handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   enhancePrompt?: () => void;
 }
@@ -35,7 +35,11 @@ const EXAMPLE_PROMPTS = [
   { text: 'How do I center a div?' },
 ];
 
-const TEXTAREA_MIN_HEIGHT = 76;
+const AI_MODELS = [
+  { value: 'anthropic', label: 'Claude 3.5' },
+  { value: 'lmstudio', label: 'LM Studio Model' },
+  { value: 'deepseek', label: 'DeepSeek Model' },
+];
 
 export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   (
@@ -58,6 +62,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     ref,
   ) => {
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
+    const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].value);
 
     return (
       <div
@@ -81,11 +86,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 </p>
               </div>
             )}
-            <div
-              className={classNames('pt-6 px-6', {
-                'h-full flex flex-col': chatStarted,
-              })}
-            >
+            <div className={classNames('pt-6 px-6', { 'h-full flex flex-col': chatStarted })}>
               <ClientOnly>
                 {() => {
                   return chatStarted ? (
@@ -98,16 +99,19 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   ) : null;
                 }}
               </ClientOnly>
-              <div
-                className={classNames('relative w-full max-w-chat mx-auto z-prompt', {
-                  'sticky bottom-0': chatStarted,
-                })}
-              >
-                <div
-                  className={classNames(
-                    'shadow-sm border border-bolt-elements-borderColor bg-bolt-elements-prompt-background backdrop-filter backdrop-blur-[8px] rounded-lg overflow-hidden',
-                  )}
-                >
+              <div className={classNames('relative w-full max-w-chat mx-auto z-prompt', { 'sticky bottom-0': chatStarted })}>
+                <div className={classNames('shadow-sm border border-bolt-elements-borderColor bg-bolt-elements-prompt-background backdrop-filter backdrop-blur-[8px] rounded-lg overflow-hidden')}>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="transparent-dropdown"
+                  >
+                    {AI_MODELS.map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </select>
                   <textarea
                     ref={textareaRef}
                     className={`w-full pl-4 pt-4 pr-16 focus:outline-none resize-none text-md text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent`}
@@ -116,10 +120,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         if (event.shiftKey) {
                           return;
                         }
-
                         event.preventDefault();
-
-                        sendMessage?.(event);
+                        sendMessage?.(event, input, selectedModel);
                       }
                     }}
                     value={input}
@@ -127,7 +129,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       handleInputChange?.(event);
                     }}
                     style={{
-                      minHeight: TEXTAREA_MIN_HEIGHT,
+                      minHeight: 76,
                       maxHeight: TEXTAREA_MAX_HEIGHT,
                     }}
                     placeholder="How can Bolt help you today?"
@@ -143,8 +145,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                             handleStop?.();
                             return;
                           }
-
-                          sendMessage?.(event);
+                          sendMessage?.(event, input, selectedModel);
                         }}
                       />
                     )}
@@ -156,8 +157,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         disabled={input.length === 0 || enhancingPrompt}
                         className={classNames({
                           'opacity-100!': enhancingPrompt,
-                          'text-bolt-elements-item-contentAccent! pr-1.5 enabled:hover:bg-bolt-elements-item-backgroundAccent!':
-                            promptEnhanced,
+                          'text-bolt-elements-item-contentAccent! pr-1.5 enabled:hover:bg-bolt-elements-item-backgroundAccent!': promptEnhanced,
                         })}
                         onClick={() => enhancePrompt?.()}
                       >
@@ -174,11 +174,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                         )}
                       </IconButton>
                     </div>
-                    {input.length > 3 ? (
-                      <div className="text-xs text-bolt-elements-textTertiary">
-                        Use <kbd className="kdb">Shift</kbd> + <kbd className="kdb">Return</kbd> for a new line
-                      </div>
-                    ) : null}
                   </div>
                 </div>
                 <div className="bg-bolt-elements-background-depth-1 pb-6">{/* Ghost Element */}</div>
@@ -192,7 +187,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                       <button
                         key={index}
                         onClick={(event) => {
-                          sendMessage?.(event, examplePrompt.text);
+                          sendMessage?.(event, examplePrompt.text, selectedModel);
                         }}
                         className="group flex items-center w-full gap-2 justify-center bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary transition-theme"
                       >

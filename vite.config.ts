@@ -10,6 +10,13 @@ export default defineConfig((config) => {
     build: {
       target: 'esnext',
     },
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 1000,
+      },
+      // Other server options...
+    },
     plugins: [
       nodePolyfills({
         include: ['path', 'buffer'],

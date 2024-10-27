@@ -17,3 +17,21 @@
 .Chat {
   opacity: 1;
 }
+
+.transparent-dropdown {
+  background: transparent; /* Make the background transparent */
+  border: none; /* Remove the border */
+  color: inherit; /* Inherit text color */
+  position: relative; /* Position relative for the arrow */
+  padding-right: 30px; /* Add padding for the arrow */
+  appearance: none; /* Remove default arrow */
+}
+
+.transparent-dropdown::after {
+  content: '▼'; /* Custom arrow */
+  position: absolute;
+  right: 10px; /* Position the arrow */
+  top: 50%; /* Center the arrow vertically */
+  transform: translateY(-50%); /* Adjust for vertical centering */
+  pointer-events: none; /* Prevent interaction with the arrow */
+}
